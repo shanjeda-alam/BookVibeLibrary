@@ -21,7 +21,7 @@ export const router = createBrowserRouter([
       },
       {
         path: '/page-to-read',
-        element: <Books />,
+        element: <ErrorPage />,
       },
       {
         path: '/bookDetails/:id',

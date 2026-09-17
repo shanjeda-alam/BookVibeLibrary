@@ -19,11 +19,21 @@ const getReadBooks = () => {
   }
 };
 
+const getWishlistBooks = () => {
+  try {
+    const savedBooks = JSON.parse(localStorage.getItem('wishlistBooks') || '[]');
+    return Array.isArray(savedBooks) ? savedBooks : [];
+  } catch {
+    return [];
+  }
+};
+
 function BookDetails() {
   const { id } = useParams();
   const books = use(booksPromise);
   const selectedBook = books.find((book) => String(book.bookId) === String(id));
   const [readBooks, setReadBooks] = useState(() => getReadBooks());
+  const [wishlistBooks, setWishlistBooks] = useState(() => getWishlistBooks());
 
   if (!selectedBook) {
     return <div className="container mx-auto px-4 py-12 text-center">Book not found.</div>;
@@ -43,6 +53,7 @@ function BookDetails() {
   } = selectedBook;
 
   const isAlreadyRead = readBooks.some((book) => String(book.bookId) === String(id));
+  const isInWishlist = wishlistBooks.some((book) => String(book.bookId) === String(id));
 
   const handleMarkAsRead = () => {
     const savedBooks = getReadBooks();
@@ -58,6 +69,22 @@ function BookDetails() {
     setReadBooks(updatedBooks);
     window.dispatchEvent(new Event('readBooksUpdated'));
     toast.success('Book marked as read');
+  };
+
+  const handleWishlist = () => {
+    const savedBooks = getWishlistBooks();
+    const isAlreadyInWishlist = savedBooks.some((book) => String(book.bookId) === String(id));
+
+    if (isAlreadyInWishlist) {
+      toast.error('The book is already in your wishlist');
+      return;
+    }
+
+    const updatedBooks = [...savedBooks, selectedBook];
+    localStorage.setItem('wishlistBooks', JSON.stringify(updatedBooks));
+    setWishlistBooks(updatedBooks);
+    window.dispatchEvent(new Event('wishlistBooksUpdated'));
+    toast.success('Book added to wishlist');
   };
 
   return (
@@ -104,7 +131,9 @@ function BookDetails() {
             <button className="btn btn-primary" onClick={handleMarkAsRead}>
               {isAlreadyRead ? 'Already Read' : 'Mark as Read'}
             </button>
-            <button className="btn btn-primary btn-outline">add to Wishlist</button>
+            <button className="btn btn-primary btn-outline" onClick={handleWishlist}>
+              {isInWishlist ? 'Already in Wishlist' : 'Add to Wishlist'}
+            </button>
           </div>
         </div>
       </div>

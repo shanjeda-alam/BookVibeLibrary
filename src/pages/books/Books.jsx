@@ -10,33 +10,70 @@ const getReadBooks = () => {
   }
 };
 
+const getWishlistBooks = () => {
+  try {
+    const savedBooks = JSON.parse(localStorage.getItem('wishlistBooks') || '[]');
+    return Array.isArray(savedBooks) ? savedBooks : [];
+  } catch {
+    return [];
+  }
+};
+
 const Books = () => {
   const [readBooks, setReadBooks] = useState(() => getReadBooks());
+  const [wishlistBooks, setWishlistBooks] = useState(() => getWishlistBooks());
+  const [activeList, setActiveList] = useState('read');
 
   useEffect(() => {
     const updateReadBooks = () => setReadBooks(getReadBooks());
+    const updateWishlistBooks = () => setWishlistBooks(getWishlistBooks());
 
     updateReadBooks();
+    updateWishlistBooks();
     window.addEventListener('readBooksUpdated', updateReadBooks);
+    window.addEventListener('wishlistBooksUpdated', updateWishlistBooks);
 
     return () => {
       window.removeEventListener('readBooksUpdated', updateReadBooks);
+      window.removeEventListener('wishlistBooksUpdated', updateWishlistBooks);
     };
   }, []);
 
-  if (readBooks.length === 0) {
+  const booksToShow = activeList === 'read' ? readBooks : wishlistBooks;
+
+  if (booksToShow.length === 0) {
     return (
       <div className="container mx-auto px-4 py-10 text-center">
-        <h2 className="text-2xl font-bold">No books marked as read yet.</h2>
+        <div className="mb-8 flex justify-center gap-3">
+          <button className={`btn ${activeList === 'read' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveList('read')}>
+            Read List
+          </button>
+          <button className={`btn ${activeList === 'wishlist' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveList('wishlist')}>
+            Wish List
+          </button>
+        </div>
+        <h2 className="text-2xl font-bold">
+          {activeList === 'read' ? 'No books marked as read yet.' : 'No books added to your wishlist yet.'}
+        </h2>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto px-4 py-10">
-      <h2 className="mb-6 text-3xl font-bold">Read Books</h2>
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <h2 className="text-3xl font-bold">{activeList === 'read' ? 'Read Books' : 'Wish List'}</h2>
+        <div className="flex gap-3">
+          <button className={`btn ${activeList === 'read' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveList('read')}>
+            Read List
+          </button>
+          <button className={`btn ${activeList === 'wishlist' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveList('wishlist')}>
+            Wish List
+          </button>
+        </div>
+      </div>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {readBooks.map((book) => (
+        {booksToShow.map((book) => (
           <Link key={book.bookId} to={`/bookDetails/${book.bookId}`} className="block">
             <article className="card bg-base-100 shadow-sm transition hover:shadow-md">
               <figure>
